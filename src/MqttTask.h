@@ -1,4 +1,6 @@
 #include <unordered_map>
+#include <memory>
+#include <new>
 #include <MqttClient.h>
 #include <MqttWiFiClient.h>
 #include <MqttWriter.h>
@@ -133,12 +135,29 @@ protected:
         return;
       }
 
-      uint8_t payload[length];
-      for (size_t i = 0; i < length && this->client->available(); i++) {
-        payload[i] = this->client->read();
+      std::unique_ptr<uint8_t[]> payload(new (std::nothrow) uint8_t[length]);
+      if (!payload) {
+        Log.swarningln(FPSTR(L_MQTT_MSG), F("Message dropped: cannot allocate %u bytes"), length);
+        while (this->client->available()) {
+          this->client->read();
+        }
+        return;
+      }
+
+      size_t bytesRead = 0;
+      while (bytesRead < length && this->client->available()) {
+        payload[bytesRead++] = this->client->read();
+      }
+
+      if (bytesRead != length) {
+        Log.swarningln(FPSTR(L_MQTT_MSG), F("Message dropped: payload read %u of %u bytes"), bytesRead, length);
+        while (this->client->available()) {
+          this->client->read();
+        }
+        return;
       }
       
-      this->onMessage(topic, payload, length);
+      this->onMessage(topic, payload.get(), length);
     });
 
     // writer settings
