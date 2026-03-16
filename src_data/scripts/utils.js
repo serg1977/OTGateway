@@ -141,10 +141,17 @@ const setupNetworkScanForm = (formSelector, tableSelector) => {
         row.insertCell().textContent = `#${i + 1}`;
 
         const nameCell = row.insertCell();
-        nameCell.innerHTML = result[i].hidden ? `<i>${result[i].bssid}</i>` : result[i].ssid;
-        nameCell.onclick = (event) => {
+        if (result[i].hidden) {
+          const hiddenLabel = document.createElement('i');
+          hiddenLabel.textContent = result[i].bssid;
+          nameCell.appendChild(hiddenLabel);
+        } else {
+          nameCell.textContent = result[i].ssid;
+        }
+
+        nameCell.onclick = () => {
           const input = document.querySelector("[name='sta[ssid]']");
-          const ssid = event.target.parentNode.dataset.ssid;
+          const ssid = row.dataset.ssid;
           if (!input || !ssid) {
             return;
           }
