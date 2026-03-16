@@ -14,10 +14,10 @@ jobs:
         run: pip install platformio
 
       - name: Build firmware
-        run: pio run -e s3_mini
+        run: pio run -e nodemcu_32
 
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
           name: firmware
-          path: .pio/build/s3_mini/firmware.bin
+          path: .pio/build/nodemcu_32/firmware.bin
