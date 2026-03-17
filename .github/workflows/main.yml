@@ -10,14 +10,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install PlatformIO
-        run: pip install platformio
+      - name: Install tools
+        run: |
+          pip install platformio esptool
 
       - name: Build firmware
-        run: pio run -e nodemcu_32
+        run: |
+          pio run -e nodemcu_32
 
-      - name: Upload firmware
+      - name: Create factory.bin
+        run: |
+          esptool.py --chip esp32 merge_bin -o factory.bin \
+          0x1000 .pio/build/nodemcu_32/bootloader.bin \
+          0x8000 .pio/build/nodemcu_32/partitions.bin \
+          0x10000 .pio/build/nodemcu_32/firmware.bin
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: firmware
-          path: .pio/build/nodemcu_32/firmware.bin
+          path: |
+            .pio/build/nodemcu_32/firmware.bin
+            factory.bin
