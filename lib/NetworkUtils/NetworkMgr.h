@@ -252,15 +252,20 @@ namespace NetworkUtils {
       #elif defined(ARDUINO_ARCH_ESP32)
 
       /*
-       * IMPORTANT:
+       * Wi-Fi power saving.
        *
-       * Disable Wi-Fi power saving.
+       * WIFI_PS_NONE gives the lowest Wi-Fi latency, which is what we
+       * want for a device where LAN responsiveness matters.
        *
-       * This is especially important for a device where low latency
-       * LAN communication is more important than a small reduction
-       * in power consumption.
+       * BUT: when NimBLE (USE_BLE) is compiled in, Wi-Fi and BT share
+       * one 2.4 GHz radio. ESP-IDF's coexistence layer expects Wi-Fi
+       * modem sleep to stay enabled while BT is active - running
+       * WIFI_PS_NONE together with live BLE connections is a known
+       * source of instability for both radios, not a way to avoid it.
+       * So keep WIFI_PS_MIN_MODEM (still low-latency) when BLE is
+       * built in, and only go fully awake when it isn't.
        */
-      WiFi.setSleep(WIFI_PS_NONE);
+      WiFi.setSleep(USE_BLE ? WIFI_PS_MIN_MODEM : WIFI_PS_NONE);
 
       #endif
 
@@ -426,6 +431,17 @@ namespace NetworkUtils {
        * If several APs use the same SSID, prefer the strongest one.
        */
       WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);
+
+      /*
+       * Force 20 MHz-only channels (no HT40).
+       *
+       * OTGateway only ever sends small MQTT/HTTP traffic, so the
+       * extra throughput a 40 MHz channel offers is never used - but
+       * a wide channel doubles exposure to adjacent-channel noise on
+       * a crowded 2.4 GHz band. HT20 trades bandwidth we don't need
+       * for better resistance to interference.
+       */
+      esp_wifi_set_bandwidth(WIFI_IF_STA, WIFI_BW_HT20);
 
       #endif
 
