@@ -220,7 +220,7 @@ protected:
       this->client->setKeepAliveInterval(settings.mqtt.interval * 10000);
       this->client->setId(networkSettings.hostname);
       this->client->setUsernamePassword(settings.mqtt.user, settings.mqtt.password);
-      this->client->beginWill(this->haHelper->getDeviceTopic(F("status")).c_str(), 7, true, 1);
+      this->client->beginWill(this->haHelper->.c_str(), 7, true, 1);
       this->client->print(F("offline"));
       this->client->endWill();
       this->client->connect(settings.mqtt.server, settings.mqtt.port);
@@ -249,7 +249,7 @@ protected:
 
     // publish variables and status
     if (this->newConnection || millis() - this->prevPubVarsTime > (settings.mqtt.interval * 1000u)) {
-      this->writer->publish(this->haHelper->getDeviceTopic(F("status")).c_str(), "online", false);
+      this->writer->publish(this->haHelper->getDeviceTopic(F("status")).c_str(), "online", true);
       this->publishVariables(this->haHelper->getDeviceTopic(F("state")).c_str());
       this->prevPubVarsTime = millis();
     }
